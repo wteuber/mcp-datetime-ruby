@@ -203,6 +203,23 @@ bundle install
 bundle exec rake test
 ```
 
+### Code Style
+
+This project uses RuboCop for code style enforcement. Run RuboCop to check for style violations:
+
+```bash
+# Check for style violations
+bundle exec rubocop
+
+# Auto-correct correctable violations
+bundle exec rubocop -a
+
+# Auto-correct with more aggressive corrections
+bundle exec rubocop -A
+```
+
+The project includes a `.rubocop.yml` configuration file that customizes the rules for this codebase.
+
 ### Running Tests
 
 The gem includes comprehensive tests using Minitest:
