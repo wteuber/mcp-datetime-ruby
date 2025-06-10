@@ -38,21 +38,18 @@ The gem will automatically install an executable at `~/bin/mcp-datetime-ruby` du
    bundle install
    ```
 
-3. **Build and install the gem locally**:
-   ```bash
-   gem build mcp-datetime-ruby.gemspec
-   gem install ./mcp-datetime-ruby-0.1.0.gem
-   ```
+   This will automatically create the executable at `~/bin/mcp-datetime-ruby` via the RubyGems plugin hooks.
 
-   This will automatically create the executable at `~/bin/mcp-datetime-ruby`.
-
-4. **Or run directly without installing**:
+3. **Run directly without installing**:
    ```bash
    # Run directly from the repository
    ./bin/mcp-datetime-ruby
    
    # Or with bundle exec
    bundle exec ruby bin/mcp-datetime-ruby
+   
+   # Or use the installed executable (if ~/bin is in your PATH)
+   mcp-datetime-ruby
    ```
 
 ### Verifying Installation
@@ -250,13 +247,16 @@ The test suite includes:
 
 ### Building the Gem
 
+For publishing or distribution:
+
 ```bash
 # Build the gem
 gem build mcp-datetime-ruby.gemspec
 
-# Install locally for testing
-gem install ./mcp-datetime-ruby-0.1.0.gem
+# This creates mcp-datetime-ruby-0.1.0.gem
 ```
+
+Note: For local development, you don't need to build the gem. Running `bundle install` is sufficient as it triggers the RubyGems plugin hooks that install the executable.
 
 ### Debugging
 
