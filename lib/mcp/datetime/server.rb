@@ -1,11 +1,15 @@
 # typed: false
 # frozen_string_literal: true
 
+require_relative 'tools'
+
 module MCP
   module DateTime
     # MCP DateTime Server implementation
     # Provides datetime tools via the Model Context Protocol
     class Server
+      include Tools
+
       LOG_FILE = '/tmp/mcp_datetime_debug.log'
 
       def initialize
@@ -192,38 +196,6 @@ module MCP
             datetime_tool_definition,
             date_info_tool_definition
           ]
-        }
-      end
-
-      def datetime_tool_definition
-        {
-          name: 'get_current_datetime',
-          description: 'Get the current date and time',
-          inputSchema: {
-            type: 'object',
-            properties: {
-              format: {
-                type: 'string',
-                description: 'Optional datetime format',
-                enum: %w[iso human date_only time_only unix]
-              },
-              timezone: {
-                type: 'string',
-                description: 'Optional timezone (e.g., "America/New_York", "Europe/London")'
-              }
-            }
-          }
-        }
-      end
-
-      def date_info_tool_definition
-        {
-          name: 'get_date_info',
-          description: 'Get detailed information about the current date',
-          inputSchema: {
-            type: 'object',
-            properties: {}
-          }
         }
       end
 
