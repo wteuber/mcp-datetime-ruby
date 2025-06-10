@@ -1,11 +1,11 @@
 # typed: false
 # frozen_string_literal: true
 
-$LOAD_PATH.unshift(File.expand_path("../lib", __dir__))
-require "mcp/datetime"
-require "minitest/autorun"
-require "json"
-require "stringio"
+$LOAD_PATH.unshift(File.expand_path('../lib', __dir__))
+require 'mcp/datetime'
+require 'minitest/autorun'
+require 'json'
+require 'stringio'
 
 class MCPTestHelper < Minitest::Test
   def setup
