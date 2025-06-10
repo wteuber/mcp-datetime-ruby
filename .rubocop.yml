@@ -1,0 +1,40 @@
+AllCops:
+  TargetRubyVersion: 3.1
+  NewCops: enable
+  SuggestExtensions: false
+
+# Allow Ruby 3.1+ shorthand hash syntax
+Style/HashSyntax:
+  EnforcedShorthandSyntax: either
+
+# Adjust metrics for this project
+Metrics/ClassLength:
+  Max: 250
+
+Metrics/MethodLength:
+  Max: 20
+
+Metrics/AbcSize:
+  Max: 25
+
+Metrics/BlockLength:
+  Max: 40
+  Exclude:
+    - 'test/**/*'
+    - 'spec/**/*'
+
+Metrics/CyclomaticComplexity:
+  Max: 10
+
+# Allow get_ prefix for methods that return data
+Naming/AccessorMethodName:
+  Exclude:
+    - 'lib/mcp/datetime/server.rb'
+
+# Documentation is nice but not required for all classes
+Style/Documentation:
+  Enabled: false
+
+# It's common practice to specify development dependencies in gemspec
+Gemspec/DevelopmentDependencies:
+  Enabled: false 
