@@ -1,13 +1,8 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
-# Try to load from gem first, fall back to relative path for development
-begin
-  require "mcp/datetime"
-rescue LoadError
-  require_relative "../lib/mcp/datetime"
-end
+require File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib', 'mcp', 'datetime'))
 
 # Run the MCP DateTime server
 server = MCP::DateTime::Server.new
-server.run 
+server.run
