@@ -13,11 +13,16 @@ module MCP
         }
         $stderr.sync = true
         $stdout.sync = true
+        
+        # Ensure we handle signals properly
+        Signal.trap("INT") { exit(0) }
+        Signal.trap("TERM") { exit(0) }
 
         # Initialize logging
         log("Starting MCP DateTime server (Ruby #{RUBY_VERSION})")
         log("Script location: #{__FILE__}")
         log("Working directory: #{Dir.pwd}")
+        log("Environment: #{ENV.to_h}")
       end
 
       def run
@@ -31,7 +36,7 @@ module MCP
           if line.nil?
             log("EOF received, shutting down gracefully")
             $stderr.puts "[MCP::DateTime] EOF received, shutting down gracefully"
-            break
+            exit(0)  # Ensure clean exit
           end
 
           # Skip empty lines
@@ -44,7 +49,7 @@ module MCP
           response = handle_request(request)
 
           # Write JSON-RPC response to stdout only if there's an id (not a notification)
-          if request["id"]
+          if request["id"] && response
             $stdout.puts(JSON.generate(response))
             $stdout.flush
           end
@@ -63,7 +68,7 @@ module MCP
         rescue Interrupt
           log("Interrupted, shutting down")
           $stderr.puts "[MCP::DateTime] Interrupted, shutting down"
-          break
+          exit(0)
         rescue StandardError => e
           log("Error: #{e.message}")
           log(e.backtrace.join("\n"))
@@ -94,7 +99,7 @@ module MCP
         if method == "notifications/initialized"
           log("Client initialized notification received")
           $stderr.puts "[MCP::DateTime] Client initialized notification received"
-          return
+          return nil
         end
 
         result = case method
@@ -128,7 +133,9 @@ module MCP
         {
           protocolVersion: "2024-11-05",
           capabilities: {
-            tools: {},
+            tools: {
+              listChanged: false,
+            },
           },
           serverInfo: @server_info,
         }
