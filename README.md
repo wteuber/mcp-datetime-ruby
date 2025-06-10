@@ -1,12 +1,31 @@
 # MCP DateTime Ruby
 
-A Ruby implementation of an MCP (Model Context Protocol) server that provides datetime tools for AI assistants.
+A Ruby implementation of an MCP (Model Context Protocol) server that provides datetime tools for AI assistants. This server enables AI assistants to get current date/time information and detailed date information in various formats.
+
+## Features
+
+- Get current date and time in multiple formats (ISO, human-readable, Unix timestamp, etc.)
+- Support for timezone conversions
+- Detailed date information (weekday, quarter, leap year status, etc.)
+- Full MCP protocol compliance
+- Automatic executable installation via RubyGems plugin
+
+## Requirements
+
+- Ruby 3.1.0 or higher
+- Bundler
 
 ## Installation
 
-### Local Installation (Development)
+### From RubyGems (Once Published)
 
-Since this gem is not yet published to RubyGems, you can install it locally:
+```bash
+gem install mcp-datetime-ruby
+```
+
+The gem will automatically install an executable at `~/bin/mcp-datetime-ruby` during installation.
+
+### Local Installation (Development)
 
 1. **Clone the repository**:
    ```bash
@@ -25,7 +44,9 @@ Since this gem is not yet published to RubyGems, you can install it locally:
    gem install ./mcp-datetime-ruby-0.1.0.gem
    ```
 
-4. **Or use it directly without installing**:
+   This will automatically create the executable at `~/bin/mcp-datetime-ruby`.
+
+4. **Or run directly without installing**:
    ```bash
    # Run directly from the repository
    ./bin/mcp-datetime-ruby
@@ -34,98 +55,33 @@ Since this gem is not yet published to RubyGems, you can install it locally:
    bundle exec ruby bin/mcp-datetime-ruby
    ```
 
-### Standard Installation (Once Published)
+### Verifying Installation
 
-Add this line to your application's Gemfile:
-
-```ruby
-gem 'mcp-datetime-ruby'
-```
-
-And then execute:
+After installation, verify the executable is available:
 
 ```bash
-$ bundle install
+# Check if the executable exists
+which mcp-datetime-ruby
+
+# Or if ~/bin is not in your PATH
+ls ~/bin/mcp-datetime-ruby
 ```
 
-Or install it yourself as:
+## Configuration
 
-```bash
-$ gem install mcp-datetime-ruby
-```
+### Adding to Cursor
 
-## Uninstall
+To use this MCP server with Cursor:
 
-### Uninstalling the Gem
-
-If you installed the gem (either locally built or from RubyGems):
-
-```bash
-# Uninstall the gem
-gem uninstall mcp-datetime-ruby
-```
-
-If you have multiple versions installed, you'll be prompted to select which version to uninstall, or you can uninstall all versions:
-
-```bash
-# Uninstall all versions
-gem uninstall mcp-datetime-ruby --all
-```
-
-### Removing from Cursor Configuration
-
-If you've added the server to your Cursor configuration, remove the entry from `~/.cursor/mcp.json`:
-
-```json
-{
-  "mcpServers": {
-    // Remove this entire "datetime" section
-    "datetime": {
-      "command": "mcp-datetime-ruby"
-    }
-  }
-}
-```
-
-### Cleaning Up Local Development
-
-If you cloned the repository for development:
-
-1. **Remove the cloned repository**:
+1. **Open your MCP configuration file**:
    ```bash
-   rm -rf /path/to/mcp-datetime-ruby
+   # Create the file if it doesn't exist
+   touch ~/.cursor/mcp.json
    ```
-
-2. **Remove any locally built gem files**:
-   ```bash
-   rm mcp-datetime-ruby-*.gem
-   ```
-
-## Usage
-
-### As an MCP Server
-
-The gem provides an executable that can be used as an MCP server:
-
-```bash
-# If installed as a gem
-mcp-datetime-ruby
-
-# If running from the repository
-./bin/mcp-datetime-ruby
-```
-
-### In Cursor
-
-To add mcp-datetime-ruby to your MCP servers configuration:
-
-1. **Locate or create the MCP configuration file**:
-   - The configuration file is located at `~/.cursor/mcp.json`
-   - If the file doesn't exist, create it
 
 2. **Add the datetime server configuration**:
 
-   If you installed the gem and have `~/bin` in your PATH:
+   If `~/bin` is in your PATH:
    ```json
    {
      "mcpServers": {
@@ -136,7 +92,7 @@ To add mcp-datetime-ruby to your MCP servers configuration:
    }
    ```
 
-   If you need to use the full path (check with `which mcp-datetime-ruby`):
+   If you need to use the full path:
    ```json
    {
      "mcpServers": {
@@ -147,7 +103,7 @@ To add mcp-datetime-ruby to your MCP servers configuration:
    }
    ```
 
-   Or if using the repository directly without installation:
+   If running from the repository directly:
    ```json
    {
      "mcpServers": {
@@ -158,7 +114,7 @@ To add mcp-datetime-ruby to your MCP servers configuration:
    }
    ```
 
-3. **If you have existing MCP servers**, add the datetime server to the existing configuration:
+3. **If you have existing MCP servers**, add to the existing configuration:
    ```json
    {
      "mcpServers": {
@@ -172,36 +128,84 @@ To add mcp-datetime-ruby to your MCP servers configuration:
    }
    ```
 
-4. **Restart Cursor** for the changes to take effect
+4. **Restart Cursor** for the changes to take effect.
 
-5. **Verify the server is working**:
-   - In Cursor, you should now have access to the datetime tools
-   - Try asking the AI to "get the current time" or "what's today's date"
+5. **Verify the server is working** by asking the AI to "get the current time" or "what's today's date".
 
-### Available Tools
+## Available Tools
 
-The server provides two tools:
-
-#### `get_current_datetime`
+### `get_current_datetime`
 
 Get the current date and time in various formats.
 
-Parameters:
-- `format` (optional): One of `iso`, `human`, `date_only`, `time_only`, `unix`
-- `timezone` (optional): IANA timezone name (e.g., "America/New_York", "Europe/London")
+**Parameters:**
+- `format` (optional): Output format
+  - `iso` (default): ISO 8601 format (e.g., "2024-01-15T14:30:45-05:00")
+  - `human`: Human-readable format (e.g., "January 15, 2024 at 02:30 PM")
+  - `date_only`: Date only (e.g., "2024-01-15")
+  - `time_only`: Time only (e.g., "14:30:45")
+  - `unix`: Unix timestamp (e.g., "1705342245")
+- `timezone` (optional): IANA timezone name (e.g., "America/New_York", "Europe/London", "Asia/Tokyo")
 
-#### `get_date_info`
+**Example Response:**
+```json
+{
+  "datetime": "2024-01-15T14:30:45-05:00",
+  "timestamp": 1705342245.123456,
+  "year": 2024,
+  "month": 1,
+  "day": 15,
+  "hour": 14,
+  "minute": 30,
+  "second": 45,
+  "weekday": "Monday",
+  "timezone": "EST"
+}
+```
 
-Get detailed information about the current date including:
-- Date components (year, month, day)
-- Weekday information
-- Week/quarter of year
-- Leap year status
-- Days in month
+### `get_date_info`
 
-## Testing
+Get detailed information about the current date.
 
-The gem includes comprehensive tests using Minitest. To run the tests:
+**Parameters:** None
+
+**Example Response:**
+```json
+{
+  "date": "2024-01-15",
+  "year": 2024,
+  "month": 1,
+  "month_name": "January",
+  "day": 15,
+  "weekday": "Monday",
+  "weekday_number": 1,
+  "day_of_year": 15,
+  "week_of_year": 3,
+  "quarter": 1,
+  "is_weekend": false,
+  "is_leap_year": true,
+  "days_in_month": 31,
+  "timezone": "EST"
+}
+```
+
+## Development
+
+### Setup
+
+After cloning the repository:
+
+```bash
+# Install dependencies
+bundle install
+
+# Run tests to verify everything is working
+bundle exec rake test
+```
+
+### Running Tests
+
+The gem includes comprehensive tests using Minitest:
 
 ```bash
 # Run unit tests only (default)
@@ -215,24 +219,87 @@ bundle exec rake test_all
 
 # Run tests with verbose output
 bundle exec rake test TESTOPTS="--verbose"
+
+# Run a specific test file
+bundle exec ruby -Ilib:test test/mcp/datetime/server_test.rb
 ```
 
 The test suite includes:
 - Unit tests for all MCP protocol methods
-- Tests for each datetime format
-- Error handling tests
-- Integration tests for full server communication (in separate task)
+- Tests for each datetime format and timezone handling
+- Edge case and error handling tests
+- RubyGems plugin tests
+- Integration tests for full server communication
 
-## Development
+### Building the Gem
 
-After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake test` to run the tests.
+```bash
+# Build the gem
+gem build mcp-datetime-ruby.gemspec
 
-To install this gem onto your local machine, run `bundle exec rake install`.
+# Install locally for testing
+gem install ./mcp-datetime-ruby-0.1.0.gem
+```
+
+### Debugging
+
+The server logs debug information to `/tmp/mcp_datetime_debug.log`. You can tail this file to see server activity:
+
+```bash
+tail -f /tmp/mcp_datetime_debug.log
+```
+
+## Uninstalling
+
+### Uninstall the Gem
+
+```bash
+# Uninstall the gem (this will also remove the executable from ~/bin)
+gem uninstall mcp-datetime-ruby
+
+# If multiple versions are installed
+gem uninstall mcp-datetime-ruby --all
+```
+
+### Remove from Cursor Configuration
+
+Remove the datetime server entry from `~/.cursor/mcp.json`:
+
+```json
+{
+  "mcpServers": {
+    // Remove this entire "datetime" section
+    "datetime": {
+      "command": "mcp-datetime-ruby"
+    }
+  }
+}
+```
+
+### Clean Up Development Files
+
+If you cloned the repository:
+
+```bash
+# Remove the cloned repository
+rm -rf /path/to/mcp-datetime-ruby
+
+# Remove any locally built gem files
+rm mcp-datetime-ruby-*.gem
+```
 
 ## Contributing
 
 Bug reports and pull requests are welcome on GitHub at https://github.com/wteuber/mcp-datetime-ruby.
 
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/my-new-feature`)
+3. Write tests for your changes
+4. Make your changes and ensure all tests pass
+5. Commit your changes (`git commit -am 'Add some feature'`)
+6. Push to the branch (`git push origin feature/my-new-feature`)
+7. Create a new Pull Request
+
 ## License
 
-The gem is available as open source under the terms of the [MIT License](https://opensource.org/licenses/MIT). 
+The gem is available as open source under the terms of the [MIT License](https://opensource.org/licenses/MIT).
