@@ -54,6 +54,53 @@ Or install it yourself as:
 $ gem install mcp-datetime-ruby
 ```
 
+## Uninstall
+
+### Uninstalling the Gem
+
+If you installed the gem (either locally built or from RubyGems):
+
+```bash
+# Uninstall the gem
+gem uninstall mcp-datetime-ruby
+```
+
+If you have multiple versions installed, you'll be prompted to select which version to uninstall, or you can uninstall all versions:
+
+```bash
+# Uninstall all versions
+gem uninstall mcp-datetime-ruby --all
+```
+
+### Removing from Cursor Configuration
+
+If you've added the server to your Cursor configuration, remove the entry from `~/.cursor/mcp.json`:
+
+```json
+{
+  "mcpServers": {
+    // Remove this entire "datetime" section
+    "datetime": {
+      "command": "mcp-datetime-ruby"
+    }
+  }
+}
+```
+
+### Cleaning Up Local Development
+
+If you cloned the repository for development:
+
+1. **Remove the cloned repository**:
+   ```bash
+   rm -rf /path/to/mcp-datetime-ruby
+   ```
+
+2. **Remove any locally built gem files**:
+   ```bash
+   rm mcp-datetime-ruby-*.gem
+   ```
+
 ## Usage
 
 ### As an MCP Server
@@ -70,29 +117,66 @@ mcp-datetime-ruby
 
 ### In Cursor
 
-Add to your `~/.cursor/mcp.json`:
+To add mcp-datetime-ruby to your MCP servers configuration:
 
-```json
-{
-  "mcpServers": {
-    "datetime": {
-      "command": "mcp-datetime-ruby"
-    }
-  }
-}
-```
+1. **Locate or create the MCP configuration file**:
+   - The configuration file is located at `~/.cursor/mcp.json`
+   - If the file doesn't exist, create it
 
-Or if using the repository directly:
+2. **Add the datetime server configuration**:
 
-```json
-{
-  "mcpServers": {
-    "datetime": {
-      "command": "/path/to/mcp-datetime-ruby/bin/mcp-datetime-ruby"
-    }
-  }
-}
-```
+   If you installed the gem and have `~/bin` in your PATH:
+   ```json
+   {
+     "mcpServers": {
+       "datetime": {
+         "command": "mcp-datetime-ruby"
+       }
+     }
+   }
+   ```
+
+   If you need to use the full path (check with `which mcp-datetime-ruby`):
+   ```json
+   {
+     "mcpServers": {
+       "datetime": {
+         "command": "/Users/yourusername/bin/mcp-datetime-ruby"
+       }
+     }
+   }
+   ```
+
+   Or if using the repository directly without installation:
+   ```json
+   {
+     "mcpServers": {
+       "datetime": {
+         "command": "/path/to/mcp-datetime-ruby/bin/mcp-datetime-ruby"
+       }
+     }
+   }
+   ```
+
+3. **If you have existing MCP servers**, add the datetime server to the existing configuration:
+   ```json
+   {
+     "mcpServers": {
+       "existing-server": {
+         "command": "existing-command"
+       },
+       "datetime": {
+         "command": "mcp-datetime-ruby"
+       }
+     }
+   }
+   ```
+
+4. **Restart Cursor** for the changes to take effect
+
+5. **Verify the server is working**:
+   - In Cursor, you should now have access to the datetime tools
+   - Try asking the AI to "get the current time" or "what's today's date"
 
 ### Available Tools
 
