@@ -4,7 +4,7 @@ Gem::Specification.new do |spec|
   spec.name = 'mcp-datetime-ruby'
   spec.version = '0.1.0'
   spec.authors = ['Wolfgang Teuber']
-  spec.email = ['wolfgang@teuber.dev']
+  spec.email = ['knugie@gmx.net']
 
   spec.summary = 'MCP (Model Context Protocol) DateTime Server for Ruby'
   spec.description = 'A Ruby implementation of an MCP server that provides datetime tools for AI assistants'
