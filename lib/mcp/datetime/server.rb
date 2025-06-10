@@ -3,6 +3,8 @@
 
 module MCP
   module DateTime
+    # MCP DateTime Server implementation
+    # Provides datetime tools via the Model Context Protocol
     class Server
       LOG_FILE = '/tmp/mcp_datetime_debug.log'
 
@@ -11,76 +13,101 @@ module MCP
           name: 'mcp-datetime-ruby',
           version: VERSION
         }
+        setup_io_streams
+        setup_signal_handlers
+        log_startup_info
+      end
+
+      def run
+        warn '[MCP::DateTime] Starting server...'
+        process_requests
+        warn '[MCP::DateTime] Server stopped'
+      end
+
+      private
+
+      def setup_io_streams
         $stderr.sync = true
         $stdout.sync = true
+      end
 
-        # Ensure we handle signals properly
+      def setup_signal_handlers
         Signal.trap('INT') { exit(0) }
         Signal.trap('TERM') { exit(0) }
+      end
 
-        # Initialize logging
+      def log_startup_info
         log("Starting MCP DateTime server (Ruby #{RUBY_VERSION})")
         log("Script location: #{__FILE__}")
         log("Working directory: #{Dir.pwd}")
         log("Environment: #{ENV.to_h}")
       end
 
-      def run
-        warn '[MCP::DateTime] Starting server...'
-
+      def process_requests
         loop do
-          # Read JSON-RPC request from stdin
-          line = $stdin.gets
+          line = read_request
+          next unless line
 
-          # Exit gracefully on EOF
-          if line.nil?
-            log('EOF received, shutting down gracefully')
-            warn '[MCP::DateTime] EOF received, shutting down gracefully'
-            exit(0) # Ensure clean exit
-          end
-
-          # Skip empty lines
-          next if line.strip.empty?
-
-          request = JSON.parse(line.strip)
-          log("Received request: #{request['method']}")
-          warn "[MCP::DateTime] Received request: #{request['method']}"
-
-          response = handle_request(request)
-
-          # Write JSON-RPC response to stdout only if there's an id (not a notification)
-          if request['id'] && response
-            $stdout.puts(JSON.generate(response))
-            $stdout.flush
-          end
+          handle_request_line(line)
         rescue JSON::ParserError => e
-          log("Parse error: #{e.message}")
-          error_response = {
-            jsonrpc: '2.0',
-            error: {
-              code: -32_700,
-              message: "Parse error: #{e.message}"
-            },
-            id: nil
-          }
-          $stdout.puts(JSON.generate(error_response))
-          $stdout.flush
+          handle_parse_error(e)
         rescue Interrupt
-          log('Interrupted, shutting down')
-          warn '[MCP::DateTime] Interrupted, shutting down'
-          exit(0)
+          handle_interrupt
         rescue StandardError => e
-          log("Error: #{e.message}")
-          log(e.backtrace.join("\n"))
-          warn "[MCP::DateTime] Error: #{e.message}"
-          warn e.backtrace.join("\n")
+          handle_error(e)
         end
-
-        log('Server stopped')
-        warn '[MCP::DateTime] Server stopped'
       end
 
-      private
+      def read_request
+        line = $stdin.gets
+        if line.nil?
+          handle_eof
+          return nil
+        end
+        line.strip.empty? ? nil : line
+      end
+
+      def handle_eof
+        log('EOF received, shutting down gracefully')
+        warn '[MCP::DateTime] EOF received, shutting down gracefully'
+        exit(0)
+      end
+
+      def handle_request_line(line)
+        request = JSON.parse(line.strip)
+        log("Received request: #{request['method']}")
+        warn "[MCP::DateTime] Received request: #{request['method']}"
+
+        response = handle_request(request)
+        send_response(request, response)
+      end
+
+      def send_response(request, response)
+        return unless request['id'] && response
+
+        $stdout.puts(JSON.generate(response))
+        $stdout.flush
+      end
+
+      def handle_parse_error(error)
+        log("Parse error: #{error.message}")
+        error_response = build_error_response(-32_700, "Parse error: #{error.message}")
+        $stdout.puts(JSON.generate(error_response))
+        $stdout.flush
+      end
+
+      def handle_interrupt
+        log('Interrupted, shutting down')
+        warn '[MCP::DateTime] Interrupted, shutting down'
+        exit(0)
+      end
+
+      def handle_error(error)
+        log("Error: #{error.message}")
+        log(error.backtrace.join("\n"))
+        warn "[MCP::DateTime] Error: #{error.message}"
+        warn error.backtrace.join("\n")
+      end
 
       def log(message)
         File.open(LOG_FILE, 'a') do |f|
@@ -95,35 +122,53 @@ module MCP
         params = request['params'] || {}
         id = request['id']
 
-        # Handle notifications (no response needed)
-        if method == 'notifications/initialized'
-          log('Client initialized notification received')
-          warn '[MCP::DateTime] Client initialized notification received'
-          return nil
+        return handle_notification(method) if notification?(method)
+
+        result = dispatch_method(method, params)
+        build_success_response(result, id)
+      rescue StandardError => e
+        build_error_response(-32_603, e.message, id)
+      end
+
+      def notification?(method)
+        method == 'notifications/initialized'
+      end
+
+      def handle_notification(method)
+        return unless method == 'notifications/initialized'
+
+        log('Client initialized notification received')
+        warn '[MCP::DateTime] Client initialized notification received'
+        nil
+      end
+
+      def dispatch_method(method, params)
+        case method
+        when 'initialize'
+          handle_initialize(params)
+        when 'tools/list'
+          handle_list_tools
+        when 'tools/call'
+          handle_call_tool(params)
+        else
+          raise "Unknown method: #{method}"
         end
+      end
 
-        result = case method
-                 when 'initialize'
-                   handle_initialize(params)
-                 when 'tools/list'
-                   handle_list_tools
-                 when 'tools/call'
-                   handle_call_tool(params)
-                 else
-                   raise "Unknown method: #{method}"
-                 end
-
+      def build_success_response(result, id)
         {
           jsonrpc: '2.0',
           result:,
           id:
         }
-      rescue StandardError => e
+      end
+
+      def build_error_response(code, message, id = nil)
         {
           jsonrpc: '2.0',
           error: {
-            code: -32_603,
-            message: e.message
+            code:,
+            message:
           },
           id:
         }
@@ -144,33 +189,41 @@ module MCP
       def handle_list_tools
         {
           tools: [
-            {
-              name: 'get_current_datetime',
-              description: 'Get the current date and time',
-              inputSchema: {
-                type: 'object',
-                properties: {
-                  format: {
-                    type: 'string',
-                    description: 'Optional datetime format',
-                    enum: %w[iso human date_only time_only unix]
-                  },
-                  timezone: {
-                    type: 'string',
-                    description: 'Optional timezone (e.g., "America/New_York", "Europe/London")'
-                  }
-                }
-              }
-            },
-            {
-              name: 'get_date_info',
-              description: 'Get detailed information about the current date',
-              inputSchema: {
-                type: 'object',
-                properties: {}
+            datetime_tool_definition,
+            date_info_tool_definition
+          ]
+        }
+      end
+
+      def datetime_tool_definition
+        {
+          name: 'get_current_datetime',
+          description: 'Get the current date and time',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              format: {
+                type: 'string',
+                description: 'Optional datetime format',
+                enum: %w[iso human date_only time_only unix]
+              },
+              timezone: {
+                type: 'string',
+                description: 'Optional timezone (e.g., "America/New_York", "Europe/London")'
               }
             }
-          ]
+          }
+        }
+      end
+
+      def date_info_tool_definition
+        {
+          name: 'get_date_info',
+          description: 'Get detailed information about the current date',
+          inputSchema: {
+            type: 'object',
+            properties: {}
+          }
         }
       end
 
@@ -180,82 +233,86 @@ module MCP
 
         case tool_name
         when 'get_current_datetime'
-          get_current_datetime(arguments)
+          current_datetime(arguments)
         when 'get_date_info'
-          get_date_info
+          date_info
         else
           raise "Unknown tool: #{tool_name}"
         end
       end
 
-      def get_current_datetime(arguments)
+      def current_datetime(arguments)
         format_type = arguments['format'] || 'iso'
         timezone = arguments['timezone']
 
-        # Get current time
+        now = get_time_in_timezone(timezone)
+        formatted = format_datetime(now, format_type)
+
+        build_content_response(datetime_data(now, formatted))
+      end
+
+      def get_time_in_timezone(timezone)
         ENV['TZ'] = timezone if timezone
-        now = Time.now
+        Time.now
+      end
 
-        formatted = case format_type
-                    when 'iso'
-                      now.iso8601
-                    when 'human'
-                      now.strftime('%B %d, %Y at %I:%M %p')
-                    when 'date_only'
-                      now.strftime('%Y-%m-%d')
-                    when 'time_only'
-                      now.strftime('%H:%M:%S')
-                    when 'unix'
-                      now.to_i.to_s
-                    else
-                      now.iso8601
-                    end
+      def format_datetime(time, format_type)
+        case format_type
+        when 'human' then time.strftime('%B %d, %Y at %I:%M %p')
+        when 'date_only' then time.strftime('%Y-%m-%d')
+        when 'time_only' then time.strftime('%H:%M:%S')
+        when 'unix' then time.to_i.to_s
+        else time.iso8601
+        end
+      end
 
+      def datetime_data(time, formatted)
         {
-          content: [
-            {
-              type: 'text',
-              text: JSON.pretty_generate({
-                                           datetime: formatted,
-                                           timestamp: now.to_f,
-                                           year: now.year,
-                                           month: now.month,
-                                           day: now.day,
-                                           hour: now.hour,
-                                           minute: now.min,
-                                           second: now.sec,
-                                           weekday: now.strftime('%A'),
-                                           timezone: now.zone
-                                         })
-            }
-          ]
+          datetime: formatted,
+          timestamp: time.to_f,
+          year: time.year,
+          month: time.month,
+          day: time.day,
+          hour: time.hour,
+          minute: time.min,
+          second: time.sec,
+          weekday: time.strftime('%A'),
+          timezone: time.zone
         }
       end
 
-      def get_date_info
+      def date_info
         now = Time.now
         today = Date.today
 
+        build_content_response(date_info_data(today, now))
+      end
+
+      def date_info_data(date, time)
+        {
+          date: date.to_s,
+          year: date.year,
+          month: date.month,
+          month_name: date.strftime('%B'),
+          day: date.day,
+          weekday: date.strftime('%A'),
+          weekday_number: date.wday,
+          day_of_year: date.yday,
+          week_of_year: date.cweek,
+          quarter: ((date.month - 1) / 3) + 1,
+          is_weekend: [0, 6].include?(date.wday),
+          is_leap_year: date.leap?,
+          days_in_month: Date.new(date.year, date.month, -1).day,
+          timezone: time.zone
+        }
+      end
+
+      def build_content_response(data)
         {
           content: [
             {
               type: 'text',
-              text: JSON.pretty_generate({
-                                           date: today.to_s,
-                                           year: today.year,
-                                           month: today.month,
-                                           month_name: today.strftime('%B'),
-                                           day: today.day,
-                                           weekday: today.strftime('%A'),
-                                           weekday_number: today.wday,
-                                           day_of_year: today.yday,
-                                           week_of_year: today.cweek,
-                                           quarter: (today.month - 1) / 3 + 1,
-                                           is_weekend: [0, 6].include?(today.wday),
-                                           is_leap_year: today.leap?,
-                                           days_in_month: Date.new(today.year, today.month, -1).day,
-                                           timezone: now.zone
-                                         })
+              text: JSON.pretty_generate(data)
             }
           ]
         }

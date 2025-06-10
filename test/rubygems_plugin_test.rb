@@ -14,7 +14,7 @@ class RubygemsPluginTest < Minitest::Test
   end
 
   def teardown
-    FileUtils.rm_rf(@temp_dir) if File.exist?(@temp_dir)
+    FileUtils.rm_rf(@temp_dir)
   end
 
   def test_post_install_creates_executable
@@ -115,7 +115,7 @@ class RubygemsPluginTest < Minitest::Test
   private
 
   def with_temp_home(temp_dir)
-    original_home = ENV['HOME']
+    original_home = Dir.home
     ENV['HOME'] = temp_dir
     yield
   ensure

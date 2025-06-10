@@ -43,9 +43,7 @@ Gem.post_install do |installer|
   end
 
   # Write the executable file
-  File.open(executable_path, 'w') do |file|
-    file.write(executable_content)
-  end
+  File.write(executable_path, executable_content)
 
   # Make it executable
   File.chmod(0o755, executable_path)

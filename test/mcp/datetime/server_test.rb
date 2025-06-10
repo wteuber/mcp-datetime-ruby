@@ -390,7 +390,7 @@ module MCP
         }
 
         # Save original timezone
-        original_tz = ENV['TZ']
+        original_tz = ENV.fetch('TZ', nil)
 
         response = send_request(@server, request)
         content = response[:result][:content].first
@@ -406,7 +406,7 @@ module MCP
 
       def test_multiple_timezone_requests
         # Test that timezone changes don't persist between requests
-        original_tz = ENV['TZ']
+        original_tz = ENV.fetch('TZ', nil)
 
         # First request with New York timezone
         request1 = {

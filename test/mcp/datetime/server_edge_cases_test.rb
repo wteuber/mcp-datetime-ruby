@@ -231,7 +231,7 @@ module MCP
         log_file = MCP::DateTime::Server::LOG_FILE
 
         # Clear log file if it exists
-        File.delete(log_file) if File.exist?(log_file)
+        FileUtils.rm_f(log_file)
 
         # Create a new server (which logs on initialization)
         create_server
