@@ -4,6 +4,38 @@ A Ruby implementation of an MCP (Model Context Protocol) server that provides da
 
 ## Installation
 
+### Local Installation (Development)
+
+Since this gem is not yet published to RubyGems, you can install it locally:
+
+1. **Clone the repository**:
+   ```bash
+   git clone https://github.com/wteuber/mcp-datetime-ruby.git
+   cd mcp-datetime-ruby
+   ```
+
+2. **Install dependencies**:
+   ```bash
+   bundle install
+   ```
+
+3. **Build and install the gem locally**:
+   ```bash
+   gem build mcp-datetime-ruby.gemspec
+   gem install ./mcp-datetime-ruby-0.1.0.gem
+   ```
+
+4. **Or use it directly without installing**:
+   ```bash
+   # Run directly from the repository
+   ./bin/mcp-datetime-ruby
+   
+   # Or with bundle exec
+   bundle exec ruby bin/mcp-datetime-ruby
+   ```
+
+### Standard Installation (Once Published)
+
 Add this line to your application's Gemfile:
 
 ```ruby
@@ -29,7 +61,11 @@ $ gem install mcp-datetime-ruby
 The gem provides an executable that can be used as an MCP server:
 
 ```bash
+# If installed as a gem
 mcp-datetime-ruby
+
+# If running from the repository
+./bin/mcp-datetime-ruby
 ```
 
 ### In Cursor
@@ -46,7 +82,7 @@ Add to your `~/.cursor/mcp.json`:
 }
 ```
 
-Or if installed locally:
+Or if using the repository directly:
 
 ```json
 {
