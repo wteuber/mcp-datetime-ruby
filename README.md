@@ -48,8 +48,8 @@ The gem will automatically install an executable at `~/bin/mcp-datetime-ruby` du
    # Or with bundle exec
    bundle exec ruby bin/mcp-datetime-ruby
    
-   # Or use the installed executable (if ~/bin is in your PATH)
-   mcp-datetime-ruby
+   # Or use the installed executable
+   ~/bin/mcp-datetime-ruby
    ```
 
 ### Verifying Installation
@@ -58,13 +58,26 @@ After installation, verify the executable is available:
 
 ```bash
 # Check if the executable exists
-which mcp-datetime-ruby
-
-# Or if ~/bin is not in your PATH
 ls ~/bin/mcp-datetime-ruby
 ```
 
 ## Configuration
+
+### Adding to Claude CLI
+
+To use this MCP server with Claude CLI:
+
+```bash
+claude mcp add datetime ~/bin/mcp-datetime-ruby
+```
+
+Verify it was added successfully:
+
+```bash
+claude mcp list
+# Should show on macOS: datetime: /Users/yourusername/bin/mcp-datetime-ruby
+# Should show on Linux: datetime: /home/yourusername/bin/mcp-datetime-ruby
+```
 
 ### Adding to Cursor
 
@@ -78,18 +91,6 @@ To use this MCP server with Cursor:
 
 2. **Add the datetime server configuration**:
 
-   If `~/bin` is in your PATH:
-   ```json
-   {
-     "mcpServers": {
-       "datetime": {
-         "command": "mcp-datetime-ruby"
-       }
-     }
-   }
-   ```
-
-   If you need to use the full path:
    ```json
    {
      "mcpServers": {
@@ -100,7 +101,7 @@ To use this MCP server with Cursor:
    }
    ```
 
-   If running from the repository directly:
+   Or if running from the repository directly:
    ```json
    {
      "mcpServers": {
@@ -119,7 +120,7 @@ To use this MCP server with Cursor:
          "command": "existing-command"
        },
        "datetime": {
-         "command": "mcp-datetime-ruby"
+         "command": "~/bin/mcp-datetime-ruby"
        }
      }
    }
@@ -287,7 +288,7 @@ Remove the datetime server entry from `~/.cursor/mcp.json`:
   "mcpServers": {
     // Remove this entire "datetime" section
     "datetime": {
-      "command": "mcp-datetime-ruby"
+      "command": "/Users/yourusername/bin/mcp-datetime-ruby"
     }
   }
 }
